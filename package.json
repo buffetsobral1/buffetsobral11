@@ -5,7 +5,9 @@
   "main": "public/index.html",
   "scripts": {
     "start": "vercel dev",
-    "build": "echo 'Nenhum build necessário'"
+    "build": "echo 'Nenhum build necessário'",
+    "deploy": "vercel --prod",
+    "deploy-dev": "vercel"
   },
   "keywords": ["buffet", "sobral", "festas"],
   "author": "Buffet Sobral",

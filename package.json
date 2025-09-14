@@ -2,15 +2,18 @@
   "name": "buffet-sobral",
   "version": "1.0.0",
   "description": "Site do Buffet Sobral",
-  "main": "index.html",
+  "main": "public/index.html",
   "scripts": {
-    "start": "serve -s .",
+    "start": "vercel dev",
     "build": "echo 'Nenhum build necessário'"
   },
   "keywords": ["buffet", "sobral", "festas"],
   "author": "Buffet Sobral",
   "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
   "devDependencies": {
-    "serve": "^14.2.0"
+    "vercel": "^32.0.0"
   }
 }

@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffet Sobral</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #e91e63, #9c27b0); color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        .nav-tabs { background: white; display: flex; }
+        .nav-tab { flex: 1; padding: 15px; text-align: center; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; }
+        .nav-tab.active { color: #9c27b0; border-bottom-color: #9c27b0; background: #f8f4ff; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .simulator-form { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .event-types { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+        .event-type { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.9rem; }
+        @media (min-width: 768px) {
+            .event-types { grid-template-columns: repeat(4, 1fr); }
+        }
+        .event-type.active { background: #9c27b0; color: white; border-color: #9c27b0; }
+        .package-card { background: white; border-radius: 12px; padding: 20px; margin: 15px 0; border: 2px solid #e0e0e0; cursor: pointer; }
+        .package-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .package-name { font-size: 1.2rem; font-weight: 600; }
+        .package-price { font-size: 1.1rem; font-weight: 600; color: #4caf50; }
+        .service-card { background: white; border-radius: 12px; margin: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .service-image { 
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .service-image:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        .service-image-placeholder {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            width: 100%;
+            height: 200px;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .service-image-placeholder:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        .service-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            padding: 15px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .service-image:hover .service-image-overlay,
+        .service-image-placeholder:hover .service-image-overlay {
+            transform: translateY(0);
+        }
+        .service-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
+        }
+        .service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        @media (max-width: 767px) {
+            .service-image, .service-image-placeholder {
+                height: 150px;
+                border-radius: 8px 8px 0 0;
+            }
+        }
+        @media (min-width: 768px) {
+            .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .service-card { margin: 0; }
+            .service-image, .service-image-placeholder {
+                height: 180px;
+            }
+        }
+        @media (min-width: 1024px) {
+            .service-image, .service-image-placeholder {
+                height: 200px;
+            }
+        }
+        .service-content { padding: 20px; }
+        .service-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
+        .service-price { font-size: 1.2rem; font-weight: 600; color: #4caf50; }
+        .btn-add { background: #9c27b0; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        .selected-services { background: #e3f2fd; border-radius: 12px; padding: 20px; margin: 20px 0; display: none; }
+        .selected-services.show { display: block; }
+        .selected-services h3 { color: #1976d2; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .clear-btn { background: none; border: none; color: #f44336; cursor: pointer; font-size: 0.9rem; }
+        .service-item { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .service-info { flex: 1; }
+        .service-name { font-weight: 600; margin-bottom: 5px; }
+        .service-calc { font-size: 0.9rem; color: #666; }
+        .remove-btn { background: none; border: none; color: #f44336; cursor: pointer; font-size: 0.9rem; }
+        .total-section { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: center; }
+        .total-amount { font-size: 1.3rem; font-weight: bold; color: #2e7d32; }
+        .whatsapp-btn { background: #25d366; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .whatsapp-btn:hover { background: #128c7e; }
+        .service-slider-container { margin-top: 10px; }
+        .service-slider { width: 100%; height: 4px; border-radius: 2px; background: #e0e0e0; outline: none; -webkit-appearance: none; }
+        .service-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #2196f3; cursor: pointer; }
+        .service-quantity { font-size: 0.9rem; color: #1976d2; font-weight: 600; margin-bottom: 5px; }
+        .slider-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #999; margin-top: 3px; }
+        
+        /* Estilos para modais */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-title {
+            color: #9c27b0;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        /* Estilos para galeria de imagens */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .gallery-item {
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 4/3;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        .gallery-item.placeholder {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: white;
+            font-size: 3rem;
+        }
+        
+        /* Estilos para visualização de imagem em destaque */
+        .image-viewer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-viewer-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .image-viewer-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+        }
+        .image-viewer-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        .image-viewer-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-viewer-prev {
+            left: 20px;
+        }
+        .image-viewer-next {
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎂 Buffet Sobral</h1>
+        <div>Festas inesquecíveis em Sobral e região</div>
+        <div>📍 Sobral - CE</div>
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-add" onclick="showGalleryModal()" style="background: #fff; color: #9c27b0; border: 2px solid #9c27b0; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                📸 Fotos do Espaço
+            </button>
+            <button class="btn-add" onclick="showLiveCamera()" style="background: #9c27b0; color: #fff; border: 2px solid #9c27b0; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                🎥 Câmera ao Vivo
+            </button>
+        </div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-tab" onclick="showTab('catalogo')">📋 Catálogo</button>
+        <button class="nav-tab active" onclick="showTab('simulador')">💰 Simulador</button>
+        <button class="nav-tab" onclick="showTab('agenda')">📅 Agenda</button>
+        <button class="nav-tab" onclick="showTab('avaliacoes')">⭐ Avaliações</button>
+        <button class="nav-tab" onclick="showTab('videos')">🎬 Vídeos</button>
+    </div>
+
+    <div class="content">
+        <div id="catalogo" class="section">
+            <h2>Nossos Serviços</h2>
+            
+            <div class="services-grid">
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="buffet-completo" role="img" aria-label="Imagem do serviço Buffet Completo">
+                    🍽️
+                    <div class="service-image-overlay">Buffet completo com variedade</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Buffet Completo</h3>
+                    <p>Salgados, doces, bebidas e serviço completo</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 45/pessoa</span>
+                        <button class="btn-add" onclick="addService('Buffet Completo', 45, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="bolo-personalizado" role="img" aria-label="Imagem do serviço Bolo Personalizado">
+                    🎂
+                    <div class="service-image-overlay">Bolos únicos e personalizados</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Bolo Personalizado</h3>
+                    <p>Bolos temáticos e personalizados para sua festa</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 120/pessoa</span>
+                        <button class="btn-add" onclick="addService('Bolo Personalizado', 120, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="decoracao-tematica" role="img" aria-label="Imagem do serviço Decoração Temática">
+                    🎨
+                    <div class="service-image-overlay">Decoração criativa e temática</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Decoração Temática</h3>
+                    <p>Decoração completa para todos os tipos de festa</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 200/pessoa</span>
+                        <button class="btn-add" onclick="addService('Decoração Temática', 200, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="coffee-break" role="img" aria-label="Imagem do serviço Coffee Break Corporativo">
+                    ☕
+                    <div class="service-image-overlay">Coffee break profissional</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Coffee Break Corporativo</h3>
+                    <p>Café, salgados, doces e sucos para eventos empresariais</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 25/pessoa</span>
+                        <button class="btn-add" onclick="addService('Coffee Break Corporativo', 25, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="jantar-executivo" role="img" aria-label="Imagem do serviço Jantar Executivo">
+                    🥂
+                    <div class="service-image-overlay">Jantar sofisticado e elegante</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Jantar Executivo</h3>
+                    <p>Menu sofisticado para jantares corporativos e eventos formais</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 85/pessoa</span>
+                        <button class="btn-add" onclick="addService('Jantar Executivo', 85, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="coquetel-confraternizacao" role="img" aria-label="Imagem do serviço Coquetel de Confraternização">
+                    🍸
+                    <div class="service-image-overlay">Coquetel social e descontraído</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Coquetel de Confraternização</h3>
+                    <p>Finger foods, canapés e bebidas para eventos sociais</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 35/pessoa</span>
+                        <button class="btn-add" onclick="addService('Coquetel de Confraternização', 35, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="lanche-eventos" role="img" aria-label="Imagem do serviço Lanche para Eventos">
+                    🥪
+                    <div class="service-image-overlay">Lanches práticos e saborosos</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Lanche para Eventos</h3>
+                    <p>Sanduíches, salgados e refrigerantes para eventos casuais</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 18/pessoa</span>
+                        <button class="btn-add" onclick="addService('Lanche para Eventos', 18, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-image-placeholder" data-service="churrasco-completo" role="img" aria-label="Imagem do serviço Churrasco Completo">
+                    🔥
+                    <div class="service-image-overlay">Churrasco tradicional e saboroso</div>
+                </div>
+                <div class="service-content">
+                    <h3 class="service-title">Churrasco Completo</h3>
+                    <p>Carnes nobres, acompanhamentos e saladas para confraternizações</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span class="service-price">R$ 55/pessoa</span>
+                        <button class="btn-add" onclick="addService('Churrasco Completo', 55, 'pessoa')">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div id="simulador" class="section active">
+            <h2>Simule seu Orçamento</h2>
+            <div class="simulator-form">
+                <div>
+                    <label>Tipo de Evento</label>
+                    <div class="event-types">
+                        <div class="event-type active">Aniversário</div>
+                        <div class="event-type">Casamento</div>
+                        <div class="event-type">Formatura</div>
+                        <div class="event-type">Corporativo</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label>Número de Convidados: <span id="guestCount">59</span></label>
+                    <input type="range" min="20" max="500" value="59" id="guestSlider" style="width: 100%; margin: 10px 0;" oninput="updateGuestCount(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        <span>20</span>
+                        <span>500</span>
+                    </div>
+                </div>
+
+                <!-- Seção de Serviços Selecionados -->
+                <div id="selectedServices" class="selected-services">
+                    <h3>
+                        Serviços Selecionados
+                        <button class="clear-btn" onclick="clearAllServices()">Limpar</button>
+                    </h3>
+                    <div id="servicesList"></div>
+                    <div class="total-section">
+                        <div>Total do Orçamento</div>
+                        <div class="total-amount" id="totalAmount">R$ 0</div>
+                        <button class="whatsapp-btn" onclick="shareWhatsApp()" id="whatsappBtn" style="display: none;">
+                            📱 Fechar Orçamento no WhatsApp
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        Escolha seu Pacote
+                        <button style="background: none; border: none; color: #9c27b0; cursor: pointer; font-size: 0.9rem;" onclick="showPackages()">Voltar aos Pacotes</button>
+                    </label>
+                    
+                    <div class="package-card" onclick="selectPackage(this, 'Pacote Básico', 35)">
+                        <div class="package-header">
+                            <div class="package-name">Pacote Básico</div>
+                            <div class="package-price">R$ 35/pessoa</div>
+                        </div>
+                        <div>✓ Buffet simples<br>✓ Refrigerantes<br>✓ Bolo básico</div>
+                    </div>
+
+                    <div class="package-card" onclick="selectPackage(this, 'Pacote Completo', 55)">
+                        <div class="package-header">
+                            <div class="package-name">Pacote Completo</div>
+                            <div class="package-price">R$ 55/pessoa</div>
+                        </div>
+                        <div>✓ Buffet completo<br>✓ Bebidas variadas<br>✓ Bolo personalizado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="agenda" class="section">
+            <h2>📅 Nossa Agenda</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">Confira nossa disponibilidade e agende seu evento</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                <!-- Calendário -->
+                <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <button onclick="changeMonth(-1)" style="background: #9c27b0; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">‹</button>
+                        <h3 id="currentMonth">Janeiro 2025</h3>
+                        <button onclick="changeMonth(1)" style="background: #9c27b0; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">›</button>
+                    </div>
+                    
+                    <div id="calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 20px;">
+                        <!-- Calendário será gerado aqui -->
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center; font-size: 0.9rem;">
+                        <span>🟢 Disponível</span>
+                        <span>🔴 Reservado</span>
+                        <span>🟣 Selecionado</span>
+                    </div>
+                </div>
+                
+                <!-- Formulário -->
+                <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <h3>📝 Solicitar Agendamento</h3>
+                    
+                    <div id="selectedDate" style="display: none; background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+                        <strong>Data selecionada: <span id="selectedDateText"></span></strong>
+                    </div>
+                    
+                    <form id="agendaForm" onsubmit="submitBooking(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                        <input type="text" id="clientName" placeholder="Seu nome completo" required style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <input type="email" id="clientEmail" placeholder="seu@email.com" required style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <input type="tel" id="clientPhone" placeholder="(85) 99999-9999" required style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        
+                        <select id="eventType" required style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                            <option value="">Tipo de evento</option>
+                            <option value="aniversario">🎂 Aniversário</option>
+                            <option value="casamento">💒 Casamento</option>
+                            <option value="formatura">🎓 Formatura</option>
+                            <option value="corporativo">🏢 Corporativo</option>
+                        </select>
+                        
+                        <input type="number" id="guestCount" placeholder="Número de convidados" min="1" required style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        
+                        <textarea id="eventDetails" placeholder="Detalhes do evento (opcional)" rows="3" style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; resize: vertical;"></textarea>
+                        
+                        <button type="submit" style="background: linear-gradient(135deg, #9c27b0, #e91e63); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">
+                            📅 Solicitar Agendamento
+                        </button>
+                    </form>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                        <h4 style="color: #9c27b0; margin-bottom: 10px;">📞 Contato Direto</h4>
+                        <a href="tel:+5585999999999" style="display: block; color: #9c27b0; text-decoration: none; margin: 5px 0;">📱 (85) 99999-9999</a>
+                        <a href="mailto:contato@buffetsobral.com" style="display: block; color: #9c27b0; text-decoration: none; margin: 5px 0;">📧 contato@buffetsobral.com</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Responsividade -->
+            <style>
+                @media (max-width: 768px) {
+                    #agenda > div:first-of-type {
+                        grid-template-columns: 1fr !important;
+                        gap: 20px !important;
+                    }
+                }
+            </style>
+        </div>
+
+        <div id="avaliacoes" class="section">
+            <h2>Avaliações dos Clientes</h2>
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 1.5rem; color: #ffc107;">⭐⭐⭐⭐⭐</div>
+                <div>4.9/5 (127 avaliações)</div>
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong>Ana Paula</strong>
+                    <span style="color: #999;">14/01/2024</span>
+                </div>
+                <div style="color: #ffc107; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
+                <p>Buffet maravilhoso! A festa do meu filho ficou perfeita. Recomendo demais!</p>
+            </div>
+        </div>
+        
+        <div id="videos" class="section">
+            <h2>Vídeos em Destaque</h2>
+            <div id="featuredVideosContainer">
+                <!-- Vídeos em destaque serão carregados aqui -->
+                <p style="text-align: center; color: #666; padding: 40px 20px;">
+                    Nenhum vídeo adicionado ainda. Volte mais tarde!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Supabase client
+        import { supabase } from './supabase.js';
+        
+        let selectedServices = [];
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            // Carregar vídeos em destaque quando a aba for aberta
+            if (tabName === 'videos') {
+                loadFeaturedVideos();
+            }
+        }
+        
+        function updateGuestCount(value) {
+            document.getElementById('guestCount').textContent = value;
+            updateServiceCalculations();
+        }
+        
+        function addService(name, price, unit) {
+            // Verificar se o serviço já foi adicionado
+            if (selectedServices.find(service => service.name === name)) {
+                alert('Este serviço já foi adicionado!');
+                return;
+            }
+            
+            const defaultGuests = parseInt(document.getElementById('guestCount').textContent);
+            
+            selectedServices.push({
+                name: name,
+                price: price,
+                unit: unit,
+                quantity: defaultGuests,
+                id: Date.now() // ID único para cada serviço
+            });
+            
+            updateServicesDisplay();
+            showTab('simulador');
+        }
+        
+        function removeService(serviceName) {
+            selectedServices = selectedServices.filter(service => service.name !== serviceName);
+            updateServicesDisplay();
+        }
+        
+        function clearAllServices() {
+            selectedServices = [];
+            updateServicesDisplay();
+        }
+        
+        function updateServicesDisplay() {
+            const servicesList = document.getElementById('servicesList');
+            const selectedServicesDiv = document.getElementById('selectedServices');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            
+            if (selectedServices.length === 0) {
+                selectedServicesDiv.classList.remove('show');
+                whatsappBtn.style.display = 'none';
+                return;
+            }
+            
+            selectedServicesDiv.classList.add('show');
+            whatsappBtn.style.display = 'flex';
+            
+            let total = 0;
+            
+            servicesList.innerHTML = selectedServices.map(service => {
+                const serviceTotal = service.price * service.quantity;
+                total += serviceTotal;
+                
+                return `
+                    <div class="service-item">
+                        <div class="service-info">
+                            <div class="service-name">${service.name}</div>
+                            <div class="service-quantity">Quantidade: ${service.quantity} pessoas</div>
+                            <div class="service-slider-container">
+                                <input type="range" min="1" max="500" value="${service.quantity}" 
+                                       class="service-slider" 
+                                       oninput="updateServiceQuantity(${service.id}, this.value)">
+                                <div class="slider-labels">
+                                    <span>1</span>
+                                    <span>500</span>
+                                </div>
+                            </div>
+                            <div class="service-calc">R$ ${service.price}/${service.unit} = R$ ${serviceTotal.toLocaleString('pt-BR')}</div>
+                        </div>
+                        <button class="remove-btn" onclick="removeService('${service.name}')">Remover</button>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('totalAmount').textContent = `R$ ${total.toLocaleString('pt-BR')}`;
+        }
+        
+        function updateServiceCalculations() {
+            // Atualizar a quantidade de todos os serviços com base no slider principal
+            const mainGuestCount = parseInt(document.getElementById('guestCount').textContent);
+            selectedServices.forEach(service => {
+                service.quantity = mainGuestCount;
+            });
+            
+            if (selectedServices.length > 0) {
+                updateServicesDisplay();
+            }
+        }
+        
+        function updateServiceQuantity(serviceId, newQuantity) {
+            const service = selectedServices.find(s => s.id === serviceId);
+            if (service) {
+                service.quantity = parseInt(newQuantity);
+                updateServicesDisplay();
+            }
+        }
+        
+        function selectPackage(element, packageName, price) {
+            document.querySelectorAll('.package-card').forEach(c => {
+                c.style.borderColor = '#e0e0e0';
+                c.style.background = 'white';
+            });
+            element.style.borderColor = '#9c27b0';
+            element.style.background = '#f8f4ff';
+        }
+        
+        function showPackages() {
+            // Função para voltar aos pacotes (pode ser implementada conforme necessário)
+            console.log('Voltando aos pacotes...');
+        }
+        
+        // Adicionar interatividade aos tipos de evento
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.event-type').forEach(type => {
+                type.addEventListener('click', function() {
+                    document.querySelectorAll('.event-type').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+        
+        function shareWhatsApp() {
+            const guestCount = document.getElementById('guestCount').textContent;
+            const totalAmount = document.getElementById('totalAmount').textContent;
+            const selectedEventType = document.querySelector('.event-type.active').textContent;
+            
+            let message = `🎉 *Orçamento Buffet Sobral* 🎉\n\n`;
+            message += `📋 *Tipo de Evento:* ${selectedEventType}\n`;
+            message += `👥 *Número de Convidados:* ${guestCount} pessoas\n\n`;
+            message += `🍽️ *Serviços Selecionados:*\n`;
+            
+            selectedServices.forEach(service => {
+                const serviceTotal = service.price * service.quantity;
+                message += `• ${service.name}\n`;
+                message += `  ${service.quantity} pessoas × R$ ${service.price} = R$ ${serviceTotal.toLocaleString('pt-BR')}\n\n`;
+            });
+            
+            message += `💰 *TOTAL: ${totalAmount}*\n\n`;
+            message += `📍 Buffet Sobral - CE\n`;
+            message += `📞 Entre em contato para confirmar!`;
+            
+            const whatsappUrl = `https://wa.me/5588999999999?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        // Função para carregar dados do painel administrativo
+        async function loadAdminData() {
+            // Primeiro, tentar carregar dados gerais da API
+            try {
+                // Importar funções da API
+                const { getServicesData, getSpacePhotos, getStreamingConfig, getFeaturedVideos } = await import('./api-utils.js');
+                
+                // Carregar dados dos serviços
+                const servicesData = await getServicesData();
+                
+                if (servicesData && servicesData.length > 0) {
+                    // Usar dados da API
+                    updateServicesFromAdmin(servicesData[0]);
+                }
+                
+                // Carregar fotos do espaço
+                const spacePhotos = await getSpacePhotos();
+                
+                if (spacePhotos && spacePhotos.length > 0) {
+                    localStorage.setItem('spacePhotos', JSON.stringify(spacePhotos));
+                }
+                
+                // Carregar configuração de streaming
+                const streamingConfig = await getStreamingConfig();
+                
+                if (streamingConfig && streamingConfig.length > 0) {
+                    localStorage.setItem('streamingConfig', JSON.stringify(streamingConfig[0]));
+                }
+                
+                // Carregar vídeos em destaque
+                const featuredVideos = await getFeaturedVideos();
+                
+                if (featuredVideos && featuredVideos.length > 0) {
+                    localStorage.setItem('featuredVideos', JSON.stringify(featuredVideos));
+                }
+                
+                return;
+            } catch (error) {
+                console.error('Erro ao carregar dados da API:', error);
+            }
+            
+            // Fallback para localStorage
+            const servicesData = localStorage.getItem('servicesData');
+            if (servicesData) {
+                const data = JSON.parse(servicesData);
+                updateServicesFromAdmin(data);
+            }
+        }
+        
+        // Função para atualizar serviços com dados do admin
+        function updateServicesFromAdmin(adminData) {
+            // Mapeamento dos IDs do admin para os elementos do site
+            const serviceMapping = {
+                'buffet-completo': { name: 'Buffet Completo', defaultPrice: 45 },
+                'bolo-personalizado': { name: 'Bolo Personalizado', defaultPrice: 120 },
+                'decoracao-tematica': { name: 'Decoração Temática', defaultPrice: 200 },
+                'coffee-break': { name: 'Coffee Break Corporativo', defaultPrice: 25 },
+                'jantar-executivo': { name: 'Jantar Executivo', defaultPrice: 85 },
+                'coquetel-confraternizacao': { name: 'Coquetel de Confraternização', defaultPrice: 35 },
+                'lanche-eventos': { name: 'Lanche para Eventos', defaultPrice: 18 },
+                'churrasco-completo': { name: 'Churrasco Completo', defaultPrice: 55 }
+            };
+            
+            Object.keys(serviceMapping).forEach(serviceId => {
+                const serviceData = adminData[serviceId];
+                const mapping = serviceMapping[serviceId];
+                const serviceElement = document.querySelector(`[data-service="${serviceId}"]`);
+                
+                if (serviceElement && serviceData) {
+                    // Atualizar preço se foi modificado
+                    if (serviceData.price && serviceData.price !== mapping.defaultPrice) {
+                        const serviceCard = serviceElement.closest('.service-card');
+                        const priceElement = serviceCard.querySelector('.service-price');
+                        if (priceElement) {
+                            priceElement.textContent = `R$ ${serviceData.price}/pessoa`;
+                        }
+                        
+                        // Atualizar também no JavaScript para o simulador
+                        updateServicePrice(mapping.name, serviceData.price);
+                    }
+                    
+                    // Adicionar imagem se foi carregada
+                    if (serviceData.image) {
+                        addServiceImage(serviceElement.closest('.service-card'), serviceData.image);
+                    }
+                }
+            });
+        }
+        
+        // Função para atualizar preço no simulador
+        function updateServicePrice(serviceName, newPrice) {
+            // Atualizar nos botões de adicionar serviço
+            const buttons = document.querySelectorAll('button[onclick*="addService"]');
+            buttons.forEach(button => {
+                const onclick = button.getAttribute('onclick');
+                if (onclick.includes(serviceName)) {
+                    // Extrair parâmetros atuais
+                    const match = onclick.match(/addService\('([^']+)',\s*(\d+),\s*'([^']+)'\)/);
+                    if (match) {
+                        const [, name, , unit] = match;
+                        button.setAttribute('onclick', `addService('${name}', ${newPrice}, '${unit}')`);
+                    }
+                }
+            });
+        }
+        
+        // Função para adicionar imagem ao serviço
+        function addServiceImage(serviceElement, imageData) {
+            const placeholder = serviceElement.querySelector('.service-image-placeholder');
+            if (placeholder) {
+                // Substituir placeholder por imagem real
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'service-image';
+                imageContainer.setAttribute('data-service', placeholder.getAttribute('data-service'));
+                
+                // Criar elemento img para detectar erros de carregamento
+                const img = new Image();
+                img.onload = function() {
+                    imageContainer.style.backgroundImage = `url(${imageData})`;
+                    // Manter o overlay original
+                    const overlay = placeholder.querySelector('.service-image-overlay');
+                    if (overlay) {
+                        imageContainer.appendChild(overlay.cloneNode(true));
+                    }
+                    placeholder.parentNode.replaceChild(imageContainer, placeholder);
+                };
+                img.onerror = function() {
+                    console.warn('Erro ao carregar imagem para serviço:', placeholder.getAttribute('data-service'));
+                    // Manter placeholder em caso de erro
+                };
+                img.src = imageData;
+            }
+        }
+        
+        // Função para detectar imagens quebradas e substituir por placeholder
+        function handleImageError(serviceId) {
+            const serviceElement = document.querySelector(`[data-service="${serviceId}"]`);
+            if (serviceElement && serviceElement.classList.contains('service-image')) {
+                // Substituir imagem quebrada por placeholder
+                const placeholder = createServicePlaceholder(serviceId);
+                serviceElement.parentNode.replaceChild(placeholder, serviceElement);
+            }
+        }
+        
+        // Função para criar placeholder baseado no ID do serviço
+        function createServicePlaceholder(serviceId) {
+            const serviceIcons = {
+                'buffet-completo': { icon: '🍽️', text: 'Buffet completo com variedade', alt: 'Imagem do serviço Buffet Completo' },
+                'bolo-personalizado': { icon: '🎂', text: 'Bolos únicos e personalizados', alt: 'Imagem do serviço Bolo Personalizado' },
+                'decoracao-tematica': { icon: '🎨', text: 'Decoração criativa e temática', alt: 'Imagem do serviço Decoração Temática' },
+                'coffee-break': { icon: '☕', text: 'Coffee break profissional', alt: 'Imagem do serviço Coffee Break Corporativo' },
+                'jantar-executivo': { icon: '🥂', text: 'Jantar sofisticado e elegante', alt: 'Imagem do serviço Jantar Executivo' },
+                'coquetel-confraternizacao': { icon: '🍸', text: 'Coquetel social e descontraído', alt: 'Imagem do serviço Coquetel de Confraternização' },
+                'lanche-eventos': { icon: '🥪', text: 'Lanches práticos e saborosos', alt: 'Imagem do serviço Lanche para Eventos' },
+                'churrasco-completo': { icon: '🔥', text: 'Churrasco tradicional e saboroso', alt: 'Imagem do serviço Churrasco Completo' }
+            };
+            
+            const serviceData = serviceIcons[serviceId] || { icon: '🍽️', text: 'Serviço de buffet', alt: 'Imagem do serviço' };
+            
+            const placeholder = document.createElement('div');
+            placeholder.className = 'service-image-placeholder';
+            placeholder.setAttribute('data-service', serviceId);
+            placeholder.setAttribute('role', 'img');
+            placeholder.setAttribute('aria-label', serviceData.alt);
+            placeholder.innerHTML = `
+                ${serviceData.icon}
+                <div class="service-image-overlay">${serviceData.text}</div>
+            `;
+            
+            return placeholder;
+        }
+        
+        // Função para implementar lazy loading de imagens
+        function setupLazyLoading() {
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const imageElement = entry.target;
+                            const backgroundImage = window.getComputedStyle(imageElement).backgroundImage;
+                            
+                            if (backgroundImage && backgroundImage !== 'none') {
+                                // Imagem já está carregada, apenas observar
+                                observer.unobserve(imageElement);
+                            }
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.service-image, .service-image-placeholder').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+        }
+        
+        // Função para monitorar erros de imagem
+        function setupImageErrorHandling() {
+            // Monitorar todas as imagens de serviço
+            document.querySelectorAll('.service-image').forEach(imageElement => {
+                const serviceId = imageElement.getAttribute('data-service');
+                
+                // Verificar se a imagem de background carregou corretamente
+                const backgroundImage = window.getComputedStyle(imageElement).backgroundImage;
+                if (backgroundImage && backgroundImage !== 'none') {
+                    const imageUrl = backgroundImage.slice(5, -2); // Remove url(" e ")
+                    
+                    const testImg = new Image();
+                    testImg.onerror = function() {
+                        console.warn(`Erro ao carregar imagem para serviço ${serviceId}:`, imageUrl);
+                        handleImageError(serviceId);
+                    };
+                    testImg.src = imageUrl;
+                }
+            });
+        }
+        
+        // Função para log de erros
+        function logImageError(serviceId, imageUrl, error) {
+            const errorData = {
+                timestamp: new Date().toISOString(),
+                serviceId: serviceId,
+                imageUrl: imageUrl,
+                error: error.message || 'Erro desconhecido'
+            };
+            
+            console.error('Erro de imagem registrado:', errorData);
+            
+            // Salvar no localStorage para debugging (opcional)
+            const errorLog = JSON.parse(localStorage.getItem('imageErrors') || '[]');
+            errorLog.push(errorData);
+            
+            // Manter apenas os últimos 10 erros
+            if (errorLog.length > 10) {
+                errorLog.shift();
+            }
+            
+            localStorage.setItem('imageErrors', JSON.stringify(errorLog));
+        }
+        
+        // Carregar dados do admin quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAdminData();
+            
+            // Configurar lazy loading
+            setupLazyLoading();
+            
+            // Configurar monitoramento de erros após um pequeno delay
+            setTimeout(setupImageErrorHandling, 1000);
+        });
+        
+        // Função de teste para validar implementação
+        function validateImageImplementation() {
+            const results = {
+                placeholdersFound: 0,
+                placeholdersWithIcons: 0,
+                placeholdersWithOverlay: 0,
+                placeholdersWithAccessibility: 0,
+                cssClassesPresent: false
+            };
+            
+            // Verificar placeholders
+            const placeholders = document.querySelectorAll('.service-image-placeholder');
+            results.placeholdersFound = placeholders.length;
+            
+            placeholders.forEach(placeholder => {
+                // Verificar ícones
+                if (placeholder.textContent.match(/[🍽️🎂🎨☕🥂🍸🥪🔥]/)) {
+                    results.placeholdersWithIcons++;
+                }
+                
+                // Verificar overlay
+                if (placeholder.querySelector('.service-image-overlay')) {
+                    results.placeholdersWithOverlay++;
+                }
+                
+                // Verificar acessibilidade
+                if (placeholder.getAttribute('role') === 'img' && placeholder.getAttribute('aria-label')) {
+                    results.placeholdersWithAccessibility++;
+                }
+            });
+            
+            // Verificar se classes CSS estão presentes
+            const styleElement = document.querySelector('style');
+            if (styleElement && styleElement.textContent.includes('.service-image-placeholder')) {
+                results.cssClassesPresent = true;
+            }
+            
+            console.log('🎨 Validação das Melhorias CSS das Imagens:', results);
+            
+            // Verificar se implementação está completa
+            const isComplete = results.placeholdersFound === 8 && 
+                             results.placeholdersWithIcons === 8 && 
+                             results.placeholdersWithOverlay === 8 && 
+                             results.placeholdersWithAccessibility === 8 && 
+                             results.cssClassesPresent;
+            
+            if (isComplete) {
+                console.log('✅ Implementação das melhorias CSS concluída com sucesso!');
+            } else {
+                console.warn('⚠️ Alguns elementos da implementação podem estar faltando.');
+            }
+            
+            return results;
+        }
+        
+        console.log('Buffet Sobral carregado!');
+        
+        // Executar validação após carregamento completo
+        setTimeout(validateImageImplementation, 2000);
+        
+        // Sistema de Agenda Simples
+        let currentDate = new Date();
+        let selectedDate = null;
+        let bookedDates = ['2025-01-05', '2025-01-12', '2025-01-19', '2025-01-26']; // Datas de exemplo
+        
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            const monthElement = document.getElementById('currentMonth');
+            
+            if (!calendar || !monthElement) return;
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            monthElement.textContent = `${monthNames[month]} ${year}`;
+            
+            calendar.innerHTML = '';
+            
+            // Cabeçalhos dos dias
+            const dayHeaders = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            dayHeaders.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.style.cssText = 'padding: 8px; text-align: center; font-weight: 600; color: #666; background: #f5f5f5;';
+                dayElement.textContent = day;
+                calendar.appendChild(dayElement);
+            });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const today = new Date();
+            
+            // Dias vazios do mês anterior
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.style.cssText = 'padding: 8px;';
+                calendar.appendChild(emptyDay);
+            }
+            
+            // Dias do mês
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toISOString().split('T')[0];
+                const dayElement = document.createElement('div');
+                
+                let style = 'padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; transition: all 0.2s;';
+                let bgColor = '#e8f5e8'; // Verde para disponível
+                
+                if (date < today.setHours(0,0,0,0)) {
+                    bgColor = '#f5f5f5';
+                    style += 'color: #ccc; cursor: not-allowed;';
+                } else if (bookedDates.includes(dateString)) {
+                    bgColor = '#ffebee';
+                    style += 'color: #c62828; cursor: not-allowed;';
+                } else if (selectedDate && dateString === selectedDate) {
+                    bgColor = '#9c27b0';
+                    style += 'color: white; transform: scale(1.1);';
+                } else {
+                    style += 'color: #2e7d32;';
+                    dayElement.onclick = () => selectDate(dateString, date);
+                }
+                
+                dayElement.style.cssText = style + `background: ${bgColor};`;
+                dayElement.textContent = day;
+                calendar.appendChild(dayElement);
+            }
+        }
+        
+        function selectDate(dateString, dateObj) {
+            selectedDate = dateString;
+            generateCalendar();
+            
+            const selectedDateDiv = document.getElementById('selectedDate');
+            const selectedDateText = document.getElementById('selectedDateText');
+            
+            if (selectedDateDiv && selectedDateText) {
+                selectedDateText.textContent = dateObj.toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                selectedDateDiv.style.display = 'block';
+            }
+        }
+        
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            generateCalendar();
+        }
+        
+        function submitBooking(event) {
+            event.preventDefault();
+            
+            if (!selectedDate) {
+                alert('Por favor, selecione uma data no calendário.');
+                return;
+            }
+            
+            const formData = {
+                name: document.getElementById('clientName').value,
+                email: document.getElementById('clientEmail').value,
+                phone: document.getElementById('clientPhone').value,
+                eventType: document.getElementById('eventType').value,
+                guests: document.getElementById('guestCount').value,
+                details: document.getElementById('eventDetails').value,
+                date: selectedDate
+            };
+            
+            const eventTypes = {
+                'aniversario': 'Aniversário',
+                'casamento': 'Casamento',
+                'formatura': 'Formatura',
+                'corporativo': 'Corporativo'
+            };
+            
+            const message = `🎉 *AGENDAMENTO BUFFET SOBRAL*\\n\\n` +
+                `👤 *Cliente:* ${formData.name}\\n` +
+                `📧 *Email:* ${formData.email}\\n` +
+                `📱 *Telefone:* ${formData.phone}\\n\\n` +
+                `📅 *Data:* ${new Date(formData.date).toLocaleDateString('pt-BR')}\\n` +
+                `🎊 *Evento:* ${eventTypes[formData.eventType]}\\n` +
+                `👥 *Convidados:* ${formData.guests}\\n\\n` +
+                `📝 *Detalhes:* ${formData.details || 'Nenhum detalhe adicional'}`;
+            
+            const whatsappUrl = `https://wa.me/5585999999999?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Marcar data como reservada e limpar formulário
+            bookedDates.push(selectedDate);
+            selectedDate = null;
+            document.getElementById('agendaForm').reset();
+            document.getElementById('selectedDate').style.display = 'none';
+            generateCalendar();
+            
+            alert('Agendamento enviado! Você será redirecionado para o WhatsApp.');
+        }
+        
+        // Inicializar calendário quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(generateCalendar, 100);
+            
+            // Listener para atualizações de calendário
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'calendarUpdate') {
+                    setTimeout(generateCalendar, 100);
+                }
+            });
+        });
+        
+        // Funções para galeria de imagens
+        function showGalleryModal() {
+            // Criar o modal se não existir
+            if (!document.getElementById('galleryModal')) {
+                const modal = document.createElement('div');
+                modal.id = 'galleryModal';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title">📸 Fotos do Nosso Espaço</h2>
+                            <button class="close-btn" onclick="closeGalleryModal()">&times;</button>
+                        </div>
+                        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                            Conheça nosso buffet através destas fotos
+                        </p>
+                        <div class="gallery-grid" id="galleryGrid">
+                            <!-- Imagens serão carregadas aqui -->
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            // Carregar imagens da galeria
+            loadGalleryImages();
+            
+            // Mostrar o modal
+            document.getElementById('galleryModal').style.display = 'flex';
+        }
+        
+        function closeGalleryModal() {
+            const modal = document.getElementById('galleryModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        function loadGalleryImages() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            if (!galleryGrid) return;
+            
+            // Obter fotos do espaço do localStorage
+            const spacePhotos = JSON.parse(localStorage.getItem('spacePhotos') || '[]');
+            
+            if (spacePhotos.length === 0) {
+                // Se não houver fotos reais, mostrar placeholders
+                const images = [
+                    { id: 1, alt: "Salão Principal do Buffet", icon: "🍽️" },
+                    { id: 2, alt: "Área Externa com Jardim", icon: "🌳" },
+                    { id: 3, alt: "Cozinha Industrial", icon: "👨‍🍳" },
+                    { id: 4, alt: "Área Kids", icon: "🎠" },
+                    { id: 5, alt: "Churrasqueira", icon: "🔥" },
+                    { id: 6, alt: "Estacionamento", icon: "🚗" }
+                ];
+                
+                galleryGrid.innerHTML = images.map(img => `
+                    <div class="gallery-item placeholder" onclick="showImage(${img.id})">
+                        <span style="font-size: 3rem;">${img.icon}</span>
+                    </div>
+                `).join('');
+            } else {
+                // Mostrar fotos reais
+                galleryGrid.innerHTML = spacePhotos.map((photo, index) => `
+                    <div class="gallery-item">
+                        <img src="${photo.data}" alt="${photo.name}" onclick="showImage(${index})">
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function showImage(imageIndex) {
+            // Criar visualizador de imagem se não existir
+            if (!document.getElementById('imageViewer')) {
+                const viewer = document.createElement('div');
+                viewer.id = 'imageViewer';
+                viewer.className = 'image-viewer';
+                viewer.innerHTML = `
+                    <button class="image-viewer-close" onclick="closeImageViewer()">&times;</button>
+                    <button class="image-viewer-nav image-viewer-prev" onclick="prevImage()">&#8249;</button>
+                    <div class="image-viewer-content">
+                        <img id="viewerImage" src="" alt="">
+                    </div>
+                    <button class="image-viewer-nav image-viewer-next" onclick="nextImage()">&#8250;</button>
+                `;
+                document.body.appendChild(viewer);
+            }
+            
+            // Obter fotos do espaço do localStorage
+            const spacePhotos = JSON.parse(localStorage.getItem('spacePhotos') || '[]');
+            
+            if (spacePhotos.length > 0 && imageIndex < spacePhotos.length) {
+                // Mostrar foto real
+                const photo = spacePhotos[imageIndex];
+                document.getElementById('viewerImage').src = photo.data;
+                document.getElementById('viewerImage').alt = photo.name;
+                document.getElementById('imageViewer').style.display = 'flex';
+                
+                // Armazenar o índice atual para navegação
+                document.getElementById('imageViewer').setAttribute('data-current-index', imageIndex);
+            } else {
+                // Mostrar placeholder (para o caso de não haver fotos reais)
+                document.getElementById('viewerImage').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%239c27b0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='white'%3EImagem ${imageIndex + 1}%3C/text%3E%3C/svg%3E";
+                document.getElementById('viewerImage').alt = "Imagem " + (imageIndex + 1);
+                document.getElementById('imageViewer').style.display = 'flex';
+                document.getElementById('imageViewer').setAttribute('data-current-index', imageIndex);
+            }
+        }
+        
+        function closeImageViewer() {
+            const viewer = document.getElementById('imageViewer');
+            if (viewer) {
+                viewer.style.display = 'none';
+            }
+        }
+        
+        function prevImage() {
+            const viewer = document.getElementById('imageViewer');
+            const currentIndex = parseInt(viewer.getAttribute('data-current-index') || '0');
+            const spacePhotos = JSON.parse(localStorage.getItem('spacePhotos') || '[]');
+            const totalImages = spacePhotos.length > 0 ? spacePhotos.length : 6; // 6 placeholders padrão
+            
+            const prevIndex = currentIndex > 0 ? currentIndex - 1 : totalImages - 1;
+            showImage(prevIndex);
+        }
+        
+        function nextImage() {
+            const viewer = document.getElementById('imageViewer');
+            const currentIndex = parseInt(viewer.getAttribute('data-current-index') || '0');
+            const spacePhotos = JSON.parse(localStorage.getItem('spacePhotos') || '[]');
+            const totalImages = spacePhotos.length > 0 ? spacePhotos.length : 6; // 6 placeholders padrão
+            
+            const nextIndex = currentIndex < totalImages - 1 ? currentIndex + 1 : 0;
+            showImage(nextIndex);
+        }
+        
+        // Função para câmera ao vivo
+        function showLiveCamera() {
+            // Obter configurações de streaming do localStorage
+            const streamingConfig = localStorage.getItem('streamingConfig');
+            let youtubeChannelId = 'UC_your_channel_id';
+            let streamingEnabled = false;
+            
+            if (streamingConfig) {
+                try {
+                    const config = JSON.parse(streamingConfig);
+                    youtubeChannelId = config.channelId || youtubeChannelId;
+                    streamingEnabled = config.status === 'enabled';
+                } catch (e) {
+                    console.error('Erro ao carregar configurações de streaming:', e);
+                }
+            }
+            
+            // Criar o modal se não existir
+            if (!document.getElementById('liveCameraModal')) {
+                const modal = document.createElement('div');
+                modal.id = 'liveCameraModal';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h2 class="modal-title">🎥 Câmera ao Vivo</h2>
+                            <button class="close-btn" onclick="closeLiveCamera()">&times;</button>
+                        </div>
+                        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                            Veja nosso buffet em tempo real
+                        </p>
+                        <div style="background: #000; border-radius: 8px; padding: 0; text-align: center; min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                            ${streamingEnabled ? 
+                                `<iframe width="100%" height="315" src="https://www.youtube.com/embed/live_stream?channel=${youtubeChannelId}" frameborder="0" allowfullscreen style="border-radius: 8px 8px 0 0;"></iframe>` :
+                                `<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 315px; width: 100%; background: #f5f5f5; color: #666;">
+                                    <div style="font-size: 4rem; margin-bottom: 20px;">📹</div>
+                                    <h3 style="color: #9c27b0; margin-bottom: 10px;">Streaming Indisponível</h3>
+                                    <p style="color: #666; text-align: center; padding: 0 20px;">
+                                        No momento, nossa câmera ao vivo está temporariamente indisponível.<br>
+                                        Confira nossas fotos do espaço para conhecer nosso buffet!
+                                    </p>
+                                </div>`
+                            }
+                            <div style="padding: 15px; background: #f5f5f5; width: 100%; border-radius: 0 0 8px 8px;">
+                                <h3 style="color: #9c27b0; margin-bottom: 10px;">Transmissão ao Vivo</h3>
+                                <p style="color: #666; margin-bottom: 0;">
+                                    ${streamingEnabled ? 
+                                        'Assista nossa transmissão ao vivo 24 horas por dia e veja nosso buffet em tempo real!' :
+                                        'No momento, nossa transmissão ao vivo está temporariamente indisponível.'}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                            <p style="margin: 0; color: #0d47a1; font-size: 0.9rem;">
+                                <strong>ℹ️ Informação:</strong> Esta transmissão ao vivo mostra o espaço do nosso buffet em tempo real, 
+                                permitindo que você veja o ambiente e a movimentação antes de agendar seu evento.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            // Mostrar o modal
+            document.getElementById('liveCameraModal').style.display = 'flex';
+        }
+        
+        // Funções para vídeos em destaque
+        function loadFeaturedVideos() {
+            const videosContainer = document.getElementById('featuredVideosContainer');
+            if (!videosContainer) return;
+            
+            const featuredVideos = JSON.parse(localStorage.getItem('featuredVideos') || '[]');
+            
+            if (featuredVideos.length === 0) {
+                videosContainer.innerHTML = `
+                    <p style="text-align: center; color: #666; padding: 40px 20px;">
+                        Nenhum vídeo adicionado ainda. Volte mais tarde!
+                    </p>
+                `;
+                return;
+            }
+            
+            videosContainer.innerHTML = `
+                <div class="services-grid">
+                    ${featuredVideos.map(video => `
+                        <div class="service-card">
+                            <div style="position: relative; padding-top: 56.25%; border-radius: 12px 12px 0 0; overflow: hidden;">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/${video.videoId}" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                                </iframe>
+                            </div>
+                            <div class="service-content">
+                                <h3 class="service-title">${video.title}</h3>
+                                <button class="btn-add" onclick="showVideoModal('${video.videoId}', '${video.title}')">
+                                    Assistir em tela cheia
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function showVideoModal(videoId, title) {
+            // Criar o modal se não existir
+            if (!document.getElementById('videoModal')) {
+                const modal = document.createElement('div');
+                modal.id = 'videoModal';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 800px; width: 90%;">
+                        <div class="modal-header">
+                            <h2 class="modal-title" id="videoModalTitle"></h2>
+                            <button class="close-btn" onclick="closeVideoModal()">&times;</button>
+                        </div>
+                        <div style="position: relative; padding-top: 56.25%; border-radius: 8px; overflow: hidden;">
+                            <iframe 
+                                id="videoModalFrame"
+                                src="" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                            </iframe>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            // Atualizar título e src do vídeo
+            document.getElementById('videoModalTitle').textContent = title;
+            document.getElementById('videoModalFrame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            
+            // Mostrar o modal
+            document.getElementById('videoModal').style.display = 'flex';
+        }
+        
+        function closeVideoModal() {
+            const modal = document.getElementById('videoModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Pausar o vídeo quando fechar o modal
+                document.getElementById('videoModalFrame').src = '';
+            }
+        }
+        
+        function closeLiveCamera() {
+            const modal = document.getElementById('liveCameraModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Fechar modais ao clicar fora deles
+        document.addEventListener('click', function(e) {
+            const galleryModal = document.getElementById('galleryModal');
+            const imageViewer = document.getElementById('imageViewer');
+            const liveCameraModal = document.getElementById('liveCameraModal');
+            const videoModal = document.getElementById('videoModal');
+            
+            if (galleryModal && e.target === galleryModal) {
+                closeGalleryModal();
+            }
+            
+            if (imageViewer && e.target === imageViewer) {
+                closeImageViewer();
+            }
+            
+            if (liveCameraModal && e.target === liveCameraModal) {
+                closeLiveCamera();
+            }
+            
+            if (videoModal && e.target === videoModal) {
+                closeVideoModal();
+            }
+        });
+    </script>
+</body>
+</html>

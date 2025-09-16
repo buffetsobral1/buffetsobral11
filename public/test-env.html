@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Variáveis de Ambiente</title>
+</head>
+<body>
+    <h1>Teste de Variáveis de Ambiente</h1>
+    <div id="env-info"></div>
+    
+    <script type="module">
+        // Testar variáveis de ambiente
+        const envInfo = document.getElementById('env-info');
+        
+        envInfo.innerHTML = `
+            <h2>Variáveis de Ambiente:</h2>
+            <p>NEXT_PUBLIC_SUPABASE_URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL || 'Não definida'}</p>
+            <p>NEXT_PUBLIC_SUPABASE_ANON_KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Definida' : 'Não definida'}</p>
+        `;
+        
+        console.log('Variáveis de ambiente:', {
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Definida' : 'Não definida'
+        });
+    </script>
+</body>
+</html>

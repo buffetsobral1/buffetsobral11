@@ -5,9 +5,22 @@
   "main": "index.html",
   "scripts": {
     "start": "serve .",
-    "build": "echo 'Build completed'"
+    "build": "echo 'Build completed'",
+    "dev": "serve . -p 3000",
+    "test": "echo 'Running tests...'",
+    "clean": "echo 'Cleaning cache...' && rm -rf .cache",
+    "deploy": "vercel --prod",
+    "deploy-dev": "vercel",
+    "preview": "vercel dev"
   },
   "keywords": ["buffet", "eventos", "sobral"],
   "author": "Buffet Sobral",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0",
+    "vercel": "^30.0.0"
+  }
 }

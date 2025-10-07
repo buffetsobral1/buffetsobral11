@@ -29,17 +29,31 @@ class ServiceCatalogRenderer {
         try {
             this.showLoadingState();
             
-            // Load services from DataService
-            const services = await this.dataService.get('services', {
-                active: true,
-                ...filters
-            }, {
-                orderBy: { column: 'name', ascending: true },
-                useCache: true
-            });
+            let services = [];
+            
+            // Try to load from DataService first
+            if (this.dataService) {
+                try {
+                    services = await this.dataService.get('services', {
+                        active: true,
+                        ...filters
+                    }, {
+                        orderBy: { column: 'name', ascending: true },
+                        useCache: true
+                    });
+                    EnvironmentConfig.log('info', `Loaded ${services.length} services from DataService`);
+                } catch (error) {
+                    EnvironmentConfig.log('warn', 'DataService failed, trying localStorage fallback', error);
+                    services = this.loadServicesFromLocalStorage(filters);
+                }
+            } else {
+                // No DataService available, load from localStorage
+                EnvironmentConfig.log('info', 'No DataService available, loading from localStorage');
+                services = this.loadServicesFromLocalStorage(filters);
+            }
             
             this.currentServices = services;
-            EnvironmentConfig.log('info', `Loaded ${services.length} services for catalog`);
+            EnvironmentConfig.log('info', `Total services loaded for catalog: ${services.length}`);
             
             // Render services
             this.updateServiceDisplay(services);
@@ -49,6 +63,38 @@ class ServiceCatalogRenderer {
             this.showErrorState(error);
         } finally {
             this.isLoading = false;
+        }
+    }
+    
+    // Load services from localStorage as fallback
+    loadServicesFromLocalStorage(filters = {}) {
+        try {
+            const allServices = JSON.parse(localStorage.getItem('buffet_services') || '[]');
+            
+            // Apply filters
+            let filteredServices = allServices.filter(service => {
+                // Only show active services by default
+                if (service.active === false) return false;
+                
+                // Apply additional filters
+                for (const [key, value] of Object.entries(filters)) {
+                    if (value !== undefined && value !== null && service[key] !== value) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Sort by name
+            filteredServices.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            
+            EnvironmentConfig.log('info', `Loaded ${filteredServices.length} services from localStorage`);
+            return filteredServices;
+            
+        } catch (error) {
+            EnvironmentConfig.log('error', 'Error loading services from localStorage', error);
+            return [];
         }
     }
     

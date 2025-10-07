@@ -271,9 +271,14 @@ iv id="simulador" class="section active">
 <div id="catalogo" class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>Nossos Serviços</h2>
-                <button class="btn-add" onclick="refreshServices()" style="background: #2196f3; padding: 8px 15px; font-size: 0.9rem;">
-                    🔄 Atualizar
-                </button>
+                <div>
+                    <button class="btn-add" onclick="debugServices()" style="background: #9c27b0; padding: 8px 15px; font-size: 0.9rem; margin-right: 10px;">
+                        🔍 Debug
+                    </button>
+                    <button class="btn-add" onclick="refreshServices()" style="background: #2196f3; padding: 8px 15px; font-size: 0.9rem;">
+                        🔄 Atualizar
+                    </button>
+                </div>
             </div>
             
             <!-- Dynamic services container -->
@@ -393,11 +398,33 @@ iv id="simulador" class="section active">
         // Initialize ServiceCatalogRenderer
         async function initializeServiceCatalog() {
             try {
+                console.log('🔄 Starting ServiceCatalogRenderer initialization...');
+                
                 // Wait for DataService to be available
                 if (!window.supabaseManager?.dataService) {
-                    console.log('DataService not available, using fallback');
+                    console.log('⚠️ DataService not available, trying fallback approach');
+                    
+                    // Try to load services from localStorage as fallback
+                    const servicesContainer = document.getElementById('servicesContainer');
+                    if (servicesContainer) {
+                        const fallbackServices = JSON.parse(localStorage.getItem('buffet_services') || '[]');
+                        console.log('📦 Found fallback services:', fallbackServices.length);
+                        
+                        if (fallbackServices.length > 0) {
+                            // Create a simple renderer without DataService
+                            window.serviceRenderer = new window.ServiceCatalogRenderer(null, servicesContainer);
+                            window.serviceRenderer.currentServices = fallbackServices;
+                            window.serviceRenderer.updateServiceDisplay(fallbackServices);
+                            console.log('✅ Fallback services loaded');
+                            return;
+                        }
+                    }
+                    
+                    console.log('❌ No fallback services available');
                     return;
                 }
+                
+                console.log('✅ DataService available, proceeding with migration...');
                 
                 // Execute service migration first
                 await executeServiceMigration();
@@ -405,15 +432,19 @@ iv id="simulador" class="section active">
                 // Get services container
                 const servicesContainer = document.getElementById('servicesContainer');
                 if (!servicesContainer) {
-                    console.error('Services container not found');
+                    console.error('❌ Services container not found');
                     return;
                 }
+                
+                console.log('✅ Services container found, creating renderer...');
                 
                 // Create ServiceCatalogRenderer instance
                 window.serviceRenderer = new window.ServiceCatalogRenderer(
                     window.supabaseManager.dataService,
                     servicesContainer
                 );
+                
+                console.log('✅ ServiceCatalogRenderer created, loading services...');
                 
                 // Load and render services
                 await window.serviceRenderer.loadAndRenderServices();
@@ -484,6 +515,34 @@ iv id="simulador" class="section active">
                     window.showError('Erro na Migração', 'Falha ao migrar serviços. O sistema continuará funcionando.');
                 }
             }
+        }
+        
+        // Debug services function
+        function debugServices() {
+            console.log('=== DEBUG SERVICES ===');
+            console.log('1. SupabaseManager:', !!window.supabaseManager);
+            console.log('2. DataService:', !!window.supabaseManager?.dataService);
+            console.log('3. ServiceRenderer:', !!window.serviceRenderer);
+            console.log('4. CrossTabSync:', !!window.crossTabSync);
+            
+            // Check localStorage services
+            const localServices = JSON.parse(localStorage.getItem('buffet_services') || '[]');
+            console.log('5. LocalStorage services:', localServices.length, localServices);
+            
+            // Check if container exists
+            const container = document.getElementById('servicesContainer');
+            console.log('6. Services container:', !!container, container?.innerHTML?.length);
+            
+            // Try to force load services
+            if (window.serviceRenderer) {
+                console.log('7. Forcing service refresh...');
+                window.serviceRenderer.loadAndRenderServices();
+            } else {
+                console.log('7. ServiceRenderer not available, trying to initialize...');
+                initializeServiceCatalog();
+            }
+            
+            alert('Debug info logged to console. Press F12 to see details.');
         }
         
         // Refresh services function (connected to refresh button)

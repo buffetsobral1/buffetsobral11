@@ -395,6 +395,155 @@ iv id="simulador" class="section active">
             calculateTotal();
         }
         
+        // Fallback function to load services directly
+        function loadServicesDirectly() {
+            console.log('🔄 Loading services directly (fallback)...');
+            
+            const servicesContainer = document.getElementById('servicesContainer');
+            if (!servicesContainer) {
+                console.error('❌ Services container not found');
+                return;
+            }
+            
+            try {
+                // Get services from localStorage
+                const services = JSON.parse(localStorage.getItem('buffet_services') || '[]');
+                console.log('📦 Found services in localStorage:', services.length, services);
+                
+                // Filter only active services
+                const activeServices = services.filter(service => service.active !== false);
+                console.log('✅ Active services:', activeServices.length);
+                
+                if (activeServices.length === 0) {
+                    // Show empty state
+                    servicesContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3rem; margin-bottom: 20px;">🍽️</div>
+                            <h3>Nenhum serviço disponível</h3>
+                            <p style="color: #666; margin: 10px 0;">Os serviços aparecerão aqui quando forem adicionados no painel administrativo.</p>
+                            <button class="btn-add" onclick="window.open('admin.html', '_blank')">🔧 Ir para Admin</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Create services HTML
+                let servicesHTML = '<div class="services-grid">';
+                
+                activeServices.forEach(service => {
+                    const pricePerPerson = parseFloat(service.price_per_person) || 0;
+                    const currentGuestCount = 59;
+                    const totalPrice = pricePerPerson * currentGuestCount;
+                    const serviceIcon = service.icon || '🍽️';
+                    
+                    servicesHTML += `
+                        <div class="service-card" data-service-id="${service.id}">
+                            <div class="service-image-placeholder">
+                                ${serviceIcon}
+                                <div class="service-image-overlay">
+                                    ${service.description || 'Serviço disponível para sua festa'}
+                                </div>
+                            </div>
+                            <div class="service-content">
+                                <div class="service-title">${service.name}</div>
+                                <div class="service-price">R$ ${pricePerPerson.toFixed(2)} por pessoa</div>
+                                <div class="service-description" style="font-size: 0.9rem; color: #666; margin: 10px 0;">
+                                    ${service.description || ''}
+                                </div>
+                                
+                                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 10px 0;">
+                                    <div style="font-size: 0.9rem; color: #666;">Total estimado (59 pessoas):</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600; color: #2e7d32;">
+                                        R$ ${totalPrice.toFixed(2)}
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                    class="btn-add" 
+                                    onclick="addServiceToCartSimple('${service.id}', '${service.name}', ${pricePerPerson})"
+                                    style="width: 100%; margin-top: 10px;"
+                                >
+                                    ➕ Adicionar ao Orçamento
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                servicesHTML += '</div>';
+                
+                // Set the HTML
+                servicesContainer.innerHTML = servicesHTML;
+                
+                console.log('✅ Services loaded successfully in catalog (fallback)');
+                
+            } catch (error) {
+                console.error('❌ Error loading services (fallback):', error);
+                
+                // Show error state
+                servicesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fff3e0; border-radius: 12px; border: 1px solid #ff9800;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                        <h3 style="color: #f57c00;">Erro ao Carregar Serviços</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Não foi possível carregar os serviços. Tente recarregar a página.</p>
+                        <button class="btn-add" onclick="location.reload()" style="background: #ff9800;">
+                            🔄 Recarregar Página
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Simple add to cart function
+        function addServiceToCartSimple(serviceId, serviceName, pricePerPerson) {
+            try {
+                const quantity = 59; // Default quantity
+                
+                // Check if global selectedServices exists
+                if (typeof window.selectedServices !== 'undefined') {
+                    // Check if service already exists
+                    const existingIndex = window.selectedServices.findIndex(s => s.id == serviceId);
+                    
+                    if (existingIndex >= 0) {
+                        // Update existing service
+                        window.selectedServices[existingIndex].quantity = quantity;
+                        window.selectedServices[existingIndex].total = pricePerPerson * quantity;
+                    } else {
+                        // Add new service
+                        window.selectedServices.push({
+                            id: serviceId,
+                            name: serviceName,
+                            price: pricePerPerson,
+                            quantity: quantity,
+                            total: pricePerPerson * quantity,
+                            icon: '🍽️'
+                        });
+                    }
+                    
+                    // Update simulator display if function exists
+                    if (typeof window.updateServicesList === 'function') {
+                        window.updateServicesList();
+                    }
+                    
+                    if (typeof window.calculateTotal === 'function') {
+                        window.calculateTotal();
+                    }
+                    
+                    // Show success message
+                    alert(`${serviceName} foi adicionado ao seu orçamento!`);
+                    
+                    console.log('✅ Service added to cart:', serviceName);
+                } else {
+                    console.error('selectedServices not found');
+                    alert('Erro ao adicionar serviço ao orçamento.');
+                }
+                
+            } catch (error) {
+                console.error('Error adding service to cart:', error);
+                alert('Erro ao adicionar serviço ao orçamento.');
+            }
+        }
+        
         // Simple functions are now loaded from simple-catalog-loader.js
     </script>
     
@@ -455,7 +604,15 @@ iv id="simulador" class="section active">
             initializeCrossTabSync();
             
             // Load services in catalog (simple approach)
-            loadServicesInCatalog();
+            setTimeout(() => {
+                if (typeof loadServicesInCatalog === 'function') {
+                    loadServicesInCatalog();
+                } else {
+                    console.error('loadServicesInCatalog function not found');
+                    // Fallback: load services directly
+                    loadServicesDirectly();
+                }
+            }, 2000);
             
             // Inicializar preços e totais
             updateAllCatalogPrices();

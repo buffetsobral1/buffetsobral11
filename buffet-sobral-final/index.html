@@ -395,165 +395,7 @@ iv id="simulador" class="section active">
             calculateTotal();
         }
         
-        // Initialize ServiceCatalogRenderer
-        async function initializeServiceCatalog() {
-            try {
-                console.log('🔄 Starting ServiceCatalogRenderer initialization...');
-                
-                // Wait for DataService to be available
-                if (!window.supabaseManager?.dataService) {
-                    console.log('⚠️ DataService not available, trying fallback approach');
-                    
-                    // Try to load services from localStorage as fallback
-                    const servicesContainer = document.getElementById('servicesContainer');
-                    if (servicesContainer) {
-                        const fallbackServices = JSON.parse(localStorage.getItem('buffet_services') || '[]');
-                        console.log('📦 Found fallback services:', fallbackServices.length);
-                        
-                        if (fallbackServices.length > 0) {
-                            // Create a simple renderer without DataService
-                            window.serviceRenderer = new window.ServiceCatalogRenderer(null, servicesContainer);
-                            window.serviceRenderer.currentServices = fallbackServices;
-                            window.serviceRenderer.updateServiceDisplay(fallbackServices);
-                            console.log('✅ Fallback services loaded');
-                            return;
-                        }
-                    }
-                    
-                    console.log('❌ No fallback services available');
-                    return;
-                }
-                
-                console.log('✅ DataService available, proceeding with migration...');
-                
-                // Execute service migration first
-                await executeServiceMigration();
-                
-                // Get services container
-                const servicesContainer = document.getElementById('servicesContainer');
-                if (!servicesContainer) {
-                    console.error('❌ Services container not found');
-                    return;
-                }
-                
-                console.log('✅ Services container found, creating renderer...');
-                
-                // Create ServiceCatalogRenderer instance
-                window.serviceRenderer = new window.ServiceCatalogRenderer(
-                    window.supabaseManager.dataService,
-                    servicesContainer
-                );
-                
-                console.log('✅ ServiceCatalogRenderer created, loading services...');
-                
-                // Load and render services
-                await window.serviceRenderer.loadAndRenderServices();
-                
-                console.log('✅ ServiceCatalogRenderer initialized successfully');
-                
-            } catch (error) {
-                console.error('❌ Failed to initialize ServiceCatalogRenderer:', error);
-                
-                // Show fallback message
-                const servicesContainer = document.getElementById('servicesContainer');
-                if (servicesContainer) {
-                    servicesContainer.innerHTML = `
-                        <div style="text-align: center; padding: 40px; background: #fff3e0; border-radius: 12px;">
-                            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
-                            <h3 style="color: #f57c00;">Erro ao Carregar Catálogo</h3>
-                            <p style="color: #666; margin: 10px 0;">Não foi possível carregar o catálogo de serviços. Tente recarregar a página.</p>
-                            <button class="btn-add" onclick="location.reload()" style="background: #ff9800;">
-                                🔄 Recarregar Página
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        }
-        
-        // Execute service migration
-        async function executeServiceMigration() {
-            try {
-                if (!window.ServiceMigrationUtility || !window.supabaseManager?.dataService) {
-                    console.log('Migration utility or DataService not available');
-                    return;
-                }
-                
-                // Create migration utility instance
-                const migrationUtility = new window.ServiceMigrationUtility(window.supabaseManager.dataService);
-                
-                // Check if migration is needed
-                const status = migrationUtility.getMigrationStatus();
-                if (status.completed) {
-                    console.log('✅ Service migration already completed');
-                    return;
-                }
-                
-                console.log('🔄 Starting service migration...');
-                
-                // Execute migration
-                const result = await migrationUtility.migrateHardcodedServices();
-                
-                if (result.success) {
-                    console.log('✅ Service migration completed successfully:', result.message);
-                    
-                    if (window.showSuccess) {
-                        window.showSuccess('Migração Concluída', `Serviços migrados com sucesso: ${result.created} criados, ${result.updated} atualizados`);
-                    }
-                } else {
-                    console.error('❌ Service migration failed:', result.message);
-                    
-                    if (window.showWarning) {
-                        window.showWarning('Migração Parcial', `Migração concluída com problemas: ${result.message}`);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('❌ Migration error:', error);
-                
-                if (window.showError) {
-                    window.showError('Erro na Migração', 'Falha ao migrar serviços. O sistema continuará funcionando.');
-                }
-            }
-        }
-        
-        // Debug services function
-        function debugServices() {
-            console.log('=== DEBUG SERVICES ===');
-            console.log('1. SupabaseManager:', !!window.supabaseManager);
-            console.log('2. DataService:', !!window.supabaseManager?.dataService);
-            console.log('3. ServiceRenderer:', !!window.serviceRenderer);
-            console.log('4. CrossTabSync:', !!window.crossTabSync);
-            
-            // Check localStorage services
-            const localServices = JSON.parse(localStorage.getItem('buffet_services') || '[]');
-            console.log('5. LocalStorage services:', localServices.length, localServices);
-            
-            // Check if container exists
-            const container = document.getElementById('servicesContainer');
-            console.log('6. Services container:', !!container, container?.innerHTML?.length);
-            
-            // Try to force load services
-            if (window.serviceRenderer) {
-                console.log('7. Forcing service refresh...');
-                window.serviceRenderer.loadAndRenderServices();
-            } else {
-                console.log('7. ServiceRenderer not available, trying to initialize...');
-                initializeServiceCatalog();
-            }
-            
-            alert('Debug info logged to console. Press F12 to see details.');
-        }
-        
-        // Refresh services function (connected to refresh button)
-        function refreshServices() {
-            if (window.serviceRenderer) {
-                window.serviceRenderer.refresh();
-            } else {
-                // Fallback to page reload
-                location.reload();
-            }
-        }
+        // Simple functions are now loaded from simple-catalog-loader.js
     </script>
     
     <!-- Scripts do Supabase e configuração -->
@@ -564,8 +406,7 @@ iv id="simulador" class="section active">
     <script src="sync-manager.js"></script>
     <script src="supabase-config.js"></script>
     <script src="setup-database.js"></script>
-    <script src="service-catalog-renderer.js"></script>
-    <script src="service-migration.js"></script>
+    <script src="simple-catalog-loader.js"></script>
     <script src="cross-tab-sync.js"></script>
     <script src="script.js"></script>
     
@@ -613,8 +454,8 @@ iv id="simulador" class="section active">
             // Initialize cross-tab synchronization
             initializeCrossTabSync();
             
-            // Initialize ServiceCatalogRenderer
-            initializeServiceCatalog();
+            // Load services in catalog (simple approach)
+            loadServicesInCatalog();
             
             // Inicializar preços e totais
             updateAllCatalogPrices();

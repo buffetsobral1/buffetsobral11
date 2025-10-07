@@ -281,174 +281,13 @@ iv id="simulador" class="section active">
                 </div>
             </div>
             
-            <!-- Services container with immediate loading -->
+            <!-- Services container -->
             <div id="servicesContainer">
-                <div style="text-align: center; padding: 40px;">
+                <div id="loadingServices" style="text-align: center; padding: 40px;">
                     <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4caf50; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                     <p style="margin-top: 20px; color: #666;">Carregando serviços...</p>
                 </div>
             </div>
-            
-            <script>
-            // SOLUÇÃO DEFINITIVA - Carregamento imediato de serviços
-            (function() {
-                console.log('🚀 SOLUÇÃO DEFINITIVA - Carregando serviços imediatamente...');
-                
-                function loadServicesNow() {
-                    const container = document.getElementById('servicesContainer');
-                    if (!container) {
-                        console.error('Container não encontrado');
-                        return;
-                    }
-                    
-                    try {
-                        // Buscar serviços do localStorage
-                        const services = JSON.parse(localStorage.getItem('buffet_services') || '[]');
-                        console.log('📦 Serviços encontrados:', services.length, services);
-                        
-                        // Filtrar apenas serviços ativos
-                        const activeServices = services.filter(s => s.active !== false);
-                        console.log('✅ Serviços ativos:', activeServices.length);
-                        
-                        if (activeServices.length === 0) {
-                            container.innerHTML = `
-                                <div style="text-align: center; padding: 40px;">
-                                    <div style="font-size: 3rem; margin-bottom: 20px;">🍽️</div>
-                                    <h3>Nenhum serviço disponível</h3>
-                                    <p style="color: #666; margin: 10px 0;">Adicione serviços no painel administrativo para vê-los aqui.</p>
-                                    <button class="btn-add" onclick="window.open('admin.html', '_blank')">🔧 Ir para Admin</button>
-                                </div>
-                            `;
-                            return;
-                        }
-                        
-                        // Criar HTML dos serviços
-                        let html = '<div class="services-grid">';
-                        
-                        activeServices.forEach(service => {
-                            const price = parseFloat(service.price_per_person) || 0;
-                            const total = price * 59;
-                            const icon = service.icon || '🍽️';
-                            
-                            html += `
-                                <div class="service-card">
-                                    <div class="service-image-placeholder">
-                                        ${icon}
-                                        <div class="service-image-overlay">
-                                            ${service.description || 'Serviço disponível'}
-                                        </div>
-                                    </div>
-                                    <div class="service-content">
-                                        <div class="service-title">${service.name}</div>
-                                        <div class="service-price">R$ ${price.toFixed(2)} por pessoa</div>
-                                        <div style="font-size: 0.9rem; color: #666; margin: 10px 0;">
-                                            ${service.description || ''}
-                                        </div>
-                                        <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 10px 0;">
-                                            <div style="font-size: 0.9rem; color: #666;">Total estimado (59 pessoas):</div>
-                                            <div style="font-size: 1.1rem; font-weight: 600; color: #2e7d32;">
-                                                R$ ${total.toFixed(2)}
-                                            </div>
-                                        </div>
-                                        <button class="btn-add" onclick="adicionarAoOrcamento('${service.id}', '${service.name}', ${price})" style="width: 100%; margin-top: 10px;">
-                                            ➕ Adicionar ao Orçamento
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        html += '</div>';
-                        container.innerHTML = html;
-                        
-                        console.log('✅ Serviços carregados com sucesso!');
-                        
-                    } catch (error) {
-                        console.error('❌ Erro ao carregar serviços:', error);
-                        container.innerHTML = `
-                            <div style="text-align: center; padding: 40px; background: #fff3e0; border-radius: 12px;">
-                                <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
-                                <h3 style="color: #f57c00;">Erro ao Carregar</h3>
-                                <p style="color: #666; margin: 10px 0;">Erro: ${error.message}</p>
-                                <button class="btn-add" onclick="location.reload()" style="background: #ff9800;">🔄 Recarregar</button>
-                            </div>
-                        `;
-                    }
-                }
-                
-                // Função para adicionar ao orçamento
-                window.adicionarAoOrcamento = function(serviceId, serviceName, price) {
-                    try {
-                        if (!window.selectedServices) {
-                            window.selectedServices = [];
-                        }
-                        
-                        const existingIndex = window.selectedServices.findIndex(s => s.id == serviceId);
-                        
-                        if (existingIndex >= 0) {
-                            window.selectedServices[existingIndex].quantity = 59;
-                            window.selectedServices[existingIndex].total = price * 59;
-                        } else {
-                            window.selectedServices.push({
-                                id: serviceId,
-                                name: serviceName,
-                                price: price,
-                                quantity: 59,
-                                total: price * 59,
-                                icon: '🍽️'
-                            });
-                        }
-                        
-                        if (typeof window.updateServicesList === 'function') {
-                            window.updateServicesList();
-                        }
-                        
-                        if (typeof window.calculateTotal === 'function') {
-                            window.calculateTotal();
-                        }
-                        
-                        alert(`${serviceName} adicionado ao orçamento!`);
-                        console.log('✅ Serviço adicionado:', serviceName);
-                        
-                    } catch (error) {
-                        console.error('Erro ao adicionar:', error);
-                        alert('Erro ao adicionar serviço');
-                    }
-                };
-                
-                // Função de debug
-                window.debugServices = function() {
-                    const services = JSON.parse(localStorage.getItem('buffet_services') || '[]');
-                    console.log('=== DEBUG SERVIÇOS ===');
-                    console.log('Total:', services.length);
-                    console.log('Ativos:', services.filter(s => s.active !== false).length);
-                    console.log('Dados:', services);
-                    alert(`Total: ${services.length} | Ativos: ${services.filter(s => s.active !== false).length}`);
-                };
-                
-                // Função de atualizar
-                window.refreshServices = function() {
-                    console.log('🔄 Atualizando serviços...');
-                    loadServicesNow();
-                };
-                
-                // Carregar imediatamente
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', loadServicesNow);
-                } else {
-                    loadServicesNow();
-                }
-                
-                // Escutar mudanças no localStorage (sincronização entre abas)
-                window.addEventListener('storage', function(e) {
-                    if (e.key === 'buffet_services') {
-                        console.log('🔄 Serviços atualizados em outra aba');
-                        setTimeout(loadServicesNow, 500);
-                    }
-                });
-                
-            })();
-            </script>
         </div>
         </div>        
 <div id="agenda" class="section">
@@ -708,7 +547,214 @@ iv id="simulador" class="section active">
             }
         }
         
-        // Simple functions are now loaded from simple-catalog-loader.js
+        // SCRIPT DE CARREGAMENTO DE SERVIÇOS - VERSÃO TESTADA
+        function carregarServicos() {
+            console.log('🚀 Iniciando carregamento de serviços...');
+            
+            const container = document.getElementById('servicesContainer');
+            if (!container) {
+                console.error('❌ Container servicesContainer não encontrado');
+                return;
+            }
+            
+            try {
+                // Buscar serviços do localStorage
+                const servicesData = localStorage.getItem('buffet_services');
+                console.log('📦 Dados brutos do localStorage:', servicesData);
+                
+                const services = JSON.parse(servicesData || '[]');
+                console.log('📋 Serviços parseados:', services.length, services);
+                
+                // Filtrar apenas serviços ativos
+                const activeServices = services.filter(service => service.active !== false);
+                console.log('✅ Serviços ativos encontrados:', activeServices.length);
+                
+                if (activeServices.length === 0) {
+                    console.log('⚠️ Nenhum serviço ativo encontrado');
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3rem; margin-bottom: 20px;">🍽️</div>
+                            <h3>Nenhum serviço disponível</h3>
+                            <p style="color: #666; margin: 10px 0;">Adicione serviços no painel administrativo para vê-los aqui.</p>
+                            <button class="btn-add" onclick="window.open('admin.html', '_blank')">🔧 Ir para Admin</button>
+                            <br><br>
+                            <button class="btn-add" onclick="adicionarServicoTeste()" style="background: #9c27b0;">🧪 Adicionar Teste</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Criar HTML dos serviços
+                let html = '<div class="services-grid">';
+                
+                activeServices.forEach(service => {
+                    const price = parseFloat(service.price_per_person) || 0;
+                    const total = price * 59;
+                    const icon = service.icon || '🍽️';
+                    const name = service.name || 'Serviço sem nome';
+                    const description = service.description || 'Sem descrição';
+                    
+                    html += `
+                        <div class="service-card">
+                            <div class="service-image-placeholder">
+                                ${icon}
+                                <div class="service-image-overlay">
+                                    ${description}
+                                </div>
+                            </div>
+                            <div class="service-content">
+                                <div class="service-title">${name}</div>
+                                <div class="service-price">R$ ${price.toFixed(2)} por pessoa</div>
+                                <div style="font-size: 0.9rem; color: #666; margin: 10px 0;">
+                                    ${description}
+                                </div>
+                                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 10px 0;">
+                                    <div style="font-size: 0.9rem; color: #666;">Total estimado (59 pessoas):</div>
+                                    <div style="font-size: 1.1rem; font-weight: 600; color: #2e7d32;">
+                                        R$ ${total.toFixed(2)}
+                                    </div>
+                                </div>
+                                <button class="btn-add" onclick="adicionarAoOrcamento('${service.id}', '${name}', ${price})" style="width: 100%; margin-top: 10px;">
+                                    ➕ Adicionar ao Orçamento
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+                
+                console.log('✅ Serviços carregados com sucesso na página!');
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar serviços:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #fff3e0; border-radius: 12px;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                        <h3 style="color: #f57c00;">Erro ao Carregar Serviços</h3>
+                        <p style="color: #666; margin: 10px 0;">Erro: ${error.message}</p>
+                        <button class="btn-add" onclick="location.reload()" style="background: #ff9800;">🔄 Recarregar</button>
+                        <br><br>
+                        <button class="btn-add" onclick="adicionarServicoTeste()" style="background: #9c27b0;">🧪 Adicionar Teste</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Função para adicionar serviço de teste
+        function adicionarServicoTeste() {
+            const services = JSON.parse(localStorage.getItem('buffet_services') || '[]');
+            
+            const testService = {
+                id: Date.now(),
+                name: 'Buffet de Teste',
+                description: 'Serviço de teste para verificar funcionamento',
+                price_per_person: 35.50,
+                icon: '🧪',
+                category: 'teste',
+                active: true,
+                created_at: new Date().toISOString()
+            };
+            
+            services.push(testService);
+            localStorage.setItem('buffet_services', JSON.stringify(services));
+            
+            console.log('🧪 Serviço de teste adicionado:', testService);
+            alert('Serviço de teste adicionado! Recarregando...');
+            
+            // Recarregar serviços
+            carregarServicos();
+        }
+        
+        // Função para adicionar ao orçamento
+        function adicionarAoOrcamento(serviceId, serviceName, price) {
+            try {
+                if (!window.selectedServices) {
+                    window.selectedServices = [];
+                }
+                
+                const existingIndex = window.selectedServices.findIndex(s => s.id == serviceId);
+                
+                if (existingIndex >= 0) {
+                    window.selectedServices[existingIndex].quantity = 59;
+                    window.selectedServices[existingIndex].total = price * 59;
+                } else {
+                    window.selectedServices.push({
+                        id: serviceId,
+                        name: serviceName,
+                        price: price,
+                        quantity: 59,
+                        total: price * 59,
+                        icon: '🍽️'
+                    });
+                }
+                
+                if (typeof window.updateServicesList === 'function') {
+                    window.updateServicesList();
+                }
+                
+                if (typeof window.calculateTotal === 'function') {
+                    window.calculateTotal();
+                }
+                
+                alert(`${serviceName} adicionado ao orçamento!`);
+                console.log('✅ Serviço adicionado ao orçamento:', serviceName);
+                
+            } catch (error) {
+                console.error('❌ Erro ao adicionar ao orçamento:', error);
+                alert('Erro ao adicionar serviço ao orçamento');
+            }
+        }
+        
+        // Função de debug
+        function debugServices() {
+            const services = JSON.parse(localStorage.getItem('buffet_services') || '[]');
+            const activeServices = services.filter(s => s.active !== false);
+            
+            console.log('=== DEBUG COMPLETO ===');
+            console.log('1. Total de serviços:', services.length);
+            console.log('2. Serviços ativos:', activeServices.length);
+            console.log('3. Dados completos:', services);
+            console.log('4. Container existe:', !!document.getElementById('servicesContainer'));
+            console.log('5. Função carregarServicos existe:', typeof carregarServicos);
+            
+            const debugInfo = `
+DEBUG SERVIÇOS:
+- Total: ${services.length}
+- Ativos: ${activeServices.length}
+- Container: ${!!document.getElementById('servicesContainer') ? 'OK' : 'ERRO'}
+- Função: ${typeof carregarServicos === 'function' ? 'OK' : 'ERRO'}
+
+Dados no console (F12)
+            `;
+            
+            alert(debugInfo);
+            
+            // Forçar recarregamento
+            carregarServicos();
+        }
+        
+        // Função de refresh
+        function refreshServices() {
+            console.log('🔄 Atualizando serviços...');
+            carregarServicos();
+        }
+        
+        // Executar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM carregado, iniciando carregamento de serviços...');
+            setTimeout(carregarServicos, 1000); // Aguardar 1 segundo para garantir
+        });
+        
+        // Escutar mudanças no localStorage
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'buffet_services') {
+                console.log('🔄 Serviços atualizados em outra aba, recarregando...');
+                setTimeout(carregarServicos, 500);
+            }
+        });
+        
     </script>
     
     <!-- Scripts do Supabase e configuração -->

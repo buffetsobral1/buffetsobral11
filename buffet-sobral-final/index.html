@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffet Sobral</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        .nav-tabs { background: white; display: flex; }
+        .nav-tab { flex: 1; padding: 15px; text-align: center; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; }
+        .nav-tab.active { color: #4caf50; border-bottom-color: #4caf50; background: #f8f4ff; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .simulator-form { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .event-types { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+        .event-type { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.9rem; }
+        @media (min-width: 768px) {
+            .event-types { grid-template-columns: repeat(4, 1fr); }
+        }
+        .event-type.active { background: #4caf50; color: white; border-color: #4caf50; }
+        .service-card { background: white; border-radius: 12px; margin: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .service-image-placeholder {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            width: 100%;
+            height: 200px;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .service-image-placeholder:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        .service-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            padding: 15px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .service-image-placeholder:hover .service-image-overlay {
+            transform: translateY(0);
+        }
+        .service-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
+        }
+        .service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        @media (max-width: 767px) {
+            .service-image-placeholder {
+                height: 150px;
+                border-radius: 8px 8px 0 0;
+            }
+        }
+        @media (min-width: 768px) {
+            .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .service-card { margin: 0; }
+            .service-image-placeholder {
+                height: 180px;
+            }
+        }
+        @media (min-width: 1024px) {
+            .service-image-placeholder {
+                height: 200px;
+            }
+        }
+        .service-content { padding: 20px; }
+        .service-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
+        .service-price { font-size: 1.2rem; font-weight: 600; color: #4caf50; }
+        .btn-add { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        .btn-add:hover { background: #388e3c; }
+        .selected-services { background: #e3f2fd; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .selected-services h3 { color: #1976d2; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .clear-btn { background: none; border: none; color: #f44336; cursor: pointer; font-size: 0.9rem; }
+        .service-item { background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .service-info { flex: 1; }
+        .service-name { font-weight: 600; margin-bottom: 5px; }
+        .service-calc { font-size: 0.9rem; color: #666; }
+        .remove-btn { background: none; border: none; color: #f44336; cursor: pointer; font-size: 0.9rem; }
+        .total-section { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: center; }
+        .total-amount { font-size: 1.3rem; font-weight: bold; color: #2e7d32; }
+        .whatsapp-btn { background: #25d366; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .whatsapp-btn:hover { background: #128c7e; }
+        .service-slider-container { margin-top: 10px; }
+        .service-slider { width: 100%; height: 4px; border-radius: 2px; background: #e0e0e0; outline: none; -webkit-appearance: none; }
+        .service-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #2196f3; cursor: pointer; }
+        .service-quantity { font-size: 0.9rem; color: #1976d2; font-weight: 600; margin-bottom: 5px; }
+        .slider-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #999; margin-top: 3px; }
+        .add-services-btn { background: #4caf50; color: white; border: none; padding: 15px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; margin: 15px 0; width: 100%; }
+        .add-services-btn:hover { background: #388e3c; }
+        
+        /* Estilos para modais */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-title {
+            color: #4caf50;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        /* Estilos para galeria de imagens */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .gallery-item {
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 4/3;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-item.placeholder {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            color: white;
+            font-size: 3rem;
+            position: relative;
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>    
+<div class="header">
+        <h1>🎂 Buffet Sobral</h1>
+        <div>Festas inesquecíveis em Sobral e região</div>
+        <div>📍 Sobral - CE</div>
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-add" onclick="showGalleryModal()" style="background: #fff; color: #4caf50; border: 2px solid #4caf50; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                📸 Fotos do Espaço
+            </button>
+            <button class="btn-add" onclick="showLiveCamera()" style="background: #4caf50; color: #fff; border: 2px solid #4caf50; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                🎥 Câmera ao Vivo
+            </button>
+            <button class="btn-add" onclick="window.open('admin-simples.html', '_blank')" style="background: #9c27b0; color: #fff; border: 2px solid #9c27b0; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                🔧 Admin
+            </button>
+        </div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-tab" onclick="showTab('catalogo')">📋 Catálogo</button>
+        <button class="nav-tab active" onclick="showTab('simulador')">💰 Simulador</button>
+        <button class="nav-tab" onclick="showTab('agenda')">📅 Agenda</button>
+        <button class="nav-tab" onclick="showTab('avaliacoes')">⭐ Avaliações</button>
+        <button class="nav-tab" onclick="showTab('videos')">🎬 Vídeos</button>
+    </div>
+
+    <div class="content">        <d
+iv id="simulador" class="section active">
+            <h2>Simule seu Orçamento</h2>
+            <div class="simulator-form">
+                <div>
+                    <label>Tipo de Evento</label>
+                    <div class="event-types">
+                        <div class="event-type active" onclick="selectEventType(this)">Aniversário</div>
+                        <div class="event-type" onclick="selectEventType(this)">Casamento</div>
+                        <div class="event-type" onclick="selectEventType(this)">Formatura</div>
+                        <div class="event-type" onclick="selectEventType(this)">Corporativo</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label>Número de Convidados: <span id="guestCount">59</span></label>
+                    <input type="range" min="20" max="500" value="59" id="guestSlider" style="width: 100%; margin: 10px 0;" oninput="updateGuestCount(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        <span>20</span>
+                        <span>500</span>
+                    </div>
+                </div>
+
+                <!-- Seção de Serviços Selecionados -->
+                <div id="selectedServices" class="selected-services">
+                    <h3>
+                        Serviços Selecionados
+                        <button class="clear-btn" onclick="clearAllServices()">Limpar</button>
+                    </h3>
+                    
+                    <button class="add-services-btn" onclick="goToCatalog()">
+                        ➕ Adicionar mais serviços
+                    </button>
+                    
+                    <div id="servicesList"></div>
+                    <div class="total-section">
+                        <div>Total do Orçamento</div>
+                        <div class="total-amount" id="totalAmount">R$ 0</div>
+                        <button class="whatsapp-btn" onclick="shareWhatsApp()" id="whatsappBtn" style="display: none;">
+                            📱 Fechar Orçamento no WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>        
+<div id="catalogo" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Nossos Serviços</h2>
+                <button class="btn-add" onclick="refreshServices()" style="background: #2196f3; padding: 8px 15px; font-size: 0.9rem;">
+                    🔄 Atualizar
+                </button>
+            </div>
+            
+            <!-- Dynamic services container -->
+            <div id="servicesContainer">
+                <!-- Services will be loaded dynamically here by ServiceCatalogRenderer -->
+            </div>
+        </div>
+        </div>        
+<div id="agenda" class="section">
+            <h2>📅 Nossa Agenda</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">Confira nossa disponibilidade e agende seu evento</p>
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+                <p>Entre em contato para verificar disponibilidade:</p>
+                <p style="margin-top: 10px;">📱 (85) 99999-9999</p>
+                <p>📧 contato@buffetsobral.com</p>
+            </div>
+        </div>
+
+        <div id="avaliacoes" class="section">
+            <h2>Avaliações dos Clientes</h2>
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 1.5rem; color: #ffc107;">⭐⭐⭐⭐⭐</div>
+                <div>4.9/5 (127 avaliações)</div>
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong>Ana Paula</strong>
+                    <span style="color: #999;">14/01/2024</span>
+                </div>
+                <div style="color: #ffc107; margin-bottom: 10px;">⭐⭐⭐⭐⭐</div>
+                <p>Buffet maravilhoso! A festa do meu filho ficou perfeita. Recomendo demais!</p>
+            </div>
+        </div>
+
+        <div id="videos" class="section">
+            <h2>🎬 Vídeos em Destaque</h2>
+            <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+                <p>Confira nossos vídeos no YouTube!</p>
+                <div style="margin-top: 20px;">
+                    <iframe width="100%" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen style="border-radius: 8px; max-width: 560px;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>    <
+!-- Modal para Galeria -->
+    <div id="galleryModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📸 Fotos do Espaço</h2>
+                <button class="close-btn" onclick="closeModal('galleryModal')">&times;</button>
+            </div>
+            <div class="gallery-grid" id="galleryGrid">
+                <!-- Fotos serão carregadas aqui -->
+            </div>
+        </div>
+    </div>   
+ <script>
+        // Variáveis globais
+        let selectedServices = [];
+        let currentGuestCount = 59;
+
+        // Navegação entre abas
+        function showTab(tabName) {
+            // Esconder todas as seções
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remover classe active de todas as abas
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar a seção selecionada
+            document.getElementById(tabName).classList.add('active');
+            
+            // Adicionar classe active à aba correspondente
+            event.target.classList.add('active');
+        }
+
+        // Selecionar tipo de evento
+        function selectEventType(element) {
+            document.querySelectorAll('.event-type').forEach(type => {
+                type.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // Atualizar contador de convidados
+        function updateGuestCount(value) {
+            currentGuestCount = parseInt(value);
+            document.getElementById('guestCount').textContent = value;
+            
+            // Update ServiceCatalogRenderer if available
+            if (window.serviceRenderer) {
+                window.serviceRenderer.updateGuestCount(currentGuestCount);
+            }
+            
+            // Atualizar todos os sliders do catálogo (fallback for old system)
+            document.querySelectorAll('[data-service-slider]').forEach(slider => {
+                slider.value = value;
+            });
+            
+            // Atualizar displays de quantidade (fallback for old system)
+            document.querySelectorAll('[data-quantity-display]').forEach(display => {
+                display.textContent = value;
+            });
+            
+            // Atualizar preços totais no catálogo (fallback for old system)
+            updateAllCatalogPrices();
+            
+            // Recalcular total do simulador
+            calculateTotal();
+        }
+        
+        // Initialize ServiceCatalogRenderer
+        async function initializeServiceCatalog() {
+            try {
+                // Wait for DataService to be available
+                if (!window.supabaseManager?.dataService) {
+                    console.log('DataService not available, using fallback');
+                    return;
+                }
+                
+                // Execute service migration first
+                await executeServiceMigration();
+                
+                // Get services container
+                const servicesContainer = document.getElementById('servicesContainer');
+                if (!servicesContainer) {
+                    console.error('Services container not found');
+                    return;
+                }
+                
+                // Create ServiceCatalogRenderer instance
+                window.serviceRenderer = new window.ServiceCatalogRenderer(
+                    window.supabaseManager.dataService,
+                    servicesContainer
+                );
+                
+                // Load and render services
+                await window.serviceRenderer.loadAndRenderServices();
+                
+                console.log('✅ ServiceCatalogRenderer initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize ServiceCatalogRenderer:', error);
+                
+                // Show fallback message
+                const servicesContainer = document.getElementById('servicesContainer');
+                if (servicesContainer) {
+                    servicesContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; background: #fff3e0; border-radius: 12px;">
+                            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                            <h3 style="color: #f57c00;">Erro ao Carregar Catálogo</h3>
+                            <p style="color: #666; margin: 10px 0;">Não foi possível carregar o catálogo de serviços. Tente recarregar a página.</p>
+                            <button class="btn-add" onclick="location.reload()" style="background: #ff9800;">
+                                🔄 Recarregar Página
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Execute service migration
+        async function executeServiceMigration() {
+            try {
+                if (!window.ServiceMigrationUtility || !window.supabaseManager?.dataService) {
+                    console.log('Migration utility or DataService not available');
+                    return;
+                }
+                
+                // Create migration utility instance
+                const migrationUtility = new window.ServiceMigrationUtility(window.supabaseManager.dataService);
+                
+                // Check if migration is needed
+                const status = migrationUtility.getMigrationStatus();
+                if (status.completed) {
+                    console.log('✅ Service migration already completed');
+                    return;
+                }
+                
+                console.log('🔄 Starting service migration...');
+                
+                // Execute migration
+                const result = await migrationUtility.migrateHardcodedServices();
+                
+                if (result.success) {
+                    console.log('✅ Service migration completed successfully:', result.message);
+                    
+                    if (window.showSuccess) {
+                        window.showSuccess('Migração Concluída', `Serviços migrados com sucesso: ${result.created} criados, ${result.updated} atualizados`);
+                    }
+                } else {
+                    console.error('❌ Service migration failed:', result.message);
+                    
+                    if (window.showWarning) {
+                        window.showWarning('Migração Parcial', `Migração concluída com problemas: ${result.message}`);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Migration error:', error);
+                
+                if (window.showError) {
+                    window.showError('Erro na Migração', 'Falha ao migrar serviços. O sistema continuará funcionando.');
+                }
+            }
+        }
+        
+        // Refresh services function (connected to refresh button)
+        function refreshServices() {
+            if (window.serviceRenderer) {
+                window.serviceRenderer.refresh();
+            } else {
+                // Fallback to page reload
+                location.reload();
+            }
+        }
+    </script>
+    
+    <!-- Scripts do Supabase e configuração -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="notification-system.js"></script>
+    <script src="data-service.js"></script>
+    <script src="conflict-resolver.js"></script>
+    <script src="sync-manager.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="setup-database.js"></script>
+    <script src="service-catalog-renderer.js"></script>
+    <script src="service-migration.js"></script>
+    <script src="cross-tab-sync.js"></script>
+    <script src="script.js"></script>
+    
+    <script>
+        // Inicialização quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Inicializando aplicação...');
+            
+            // Show initial loading
+            if (window.showLoading) {
+                window.showLoading('Inicializando aplicação...');
+            }
+            
+            // Setup connection status monitoring
+            setupConnectionStatusMonitoring();
+            
+            // Aguardar Supabase estar pronto
+            try {
+                // Wait a bit for all scripts to load
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (window.waitForSupabase) {
+                    const supabase = await window.waitForSupabase();
+                    console.log('✅ Supabase pronto:', supabase.getConnectionStatus());
+                    
+                    // Update connection status display
+                    if (window.notificationSystem) {
+                        const status = supabase.getConnectionStatus();
+                        window.notificationSystem.showConnectionStatus(status, status);
+                    }
+                } else {
+                    throw new Error('Supabase não inicializado');
+                }
+                
+            } catch (error) {
+                console.log('📱 Modo offline ativo:', error.message);
+                
+                // Show offline status
+                if (window.notificationSystem) {
+                    window.notificationSystem.showConnectionStatus({ connected: false }, { environment: 'development' });
+                    window.showWarning('Modo Offline', 'Sistema funcionando em modo offline. Dados serão salvos localmente.');
+                }
+            }
+            
+            // Initialize cross-tab synchronization
+            initializeCrossTabSync();
+            
+            // Initialize ServiceCatalogRenderer
+            initializeServiceCatalog();
+            
+            // Inicializar preços e totais
+            updateAllCatalogPrices();
+            calculateTotal();
+            
+            // Hide loading
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+            
+            console.log('✅ Aplicação inicializada com sucesso!');
+        });
+        
+        // Setup connection status monitoring
+        function setupConnectionStatusMonitoring() {
+            // Listen for connection changes
+            window.addEventListener('supabase-connection-change', function(event) {
+                const { connected, error } = event.detail;
+                console.log('Connection status changed:', connected);
+                
+                // Update connection status display
+                if (window.supabaseManager && window.notificationSystem) {
+                    const status = window.supabaseManager.getConnectionStatus();
+                    window.notificationSystem.showConnectionStatus(status, status);
+                }
+            });
+            
+            // Listen for network changes
+            window.addEventListener('online', function() {
+                if (window.showInfo) {
+                    window.showInfo('Conexão Restaurada', 'Conexão de rede restaurada. Verificando servidor...');
+                }
+            });
+            
+            window.addEventListener('offline', function() {
+                if (window.showWarning) {
+                    window.showWarning('Sem Conexão', 'Conexão de rede perdida. Trabalhando em modo offline.');
+                }
+            });
+        }
+        
+        // Função para testar conexão
+        window.testConnection = function() {
+            if (window.supabaseManager) {
+                const status = window.supabaseManager.getConnectionStatus();
+                console.log('Status da conexão:', status);
+                alert(`Conexão: ${status.connected ? 'Online' : 'Offline'}\nURL: ${status.url}`);
+            }
+        };
+    </script>
+</body>
+</html>
